@@ -1,50 +1,84 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/header :: header-head('AETHER - City Management')}">
+<head th:replace="~{fragments/header :: header-head('AETHER — City Management')}">
 </head>
-<body class="theme-dark">
+<body>
     <div th:replace="~{fragments/header :: header-nav}"></div>
 
     <div class="container">
+        
+        <!-- Header -->
         <div class="page-header">
             <div>
                 <h1 class="page-title">City Configurations</h1>
                 <p class="page-subtitle">Configured virtual cities and simulation topologies</p>
             </div>
-            <a th:href="@{/cities/new}" class="btn btn-primary">+ Create City</a>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <a th:href="@{/}" class="btn btn-secondary">
+                    <span>⚡</span> Return to Cockpit
+                </a>
+                <a th:href="@{/cities/new}" class="btn btn-primary">
+                    <span>+</span> Create City
+                </a>
+            </div>
         </div>
 
-        <div class="card table-card">
+        <!-- Table Card -->
+        <div class="table-card">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th style="width: 70px;">ID</th>
                         <th>City Name</th>
                         <th>Citizens</th>
                         <th>Vehicles</th>
                         <th>Businesses</th>
-                        <th>Actions</th>
+                        <th>Status</th>
+                        <th style="text-align: right; width: 180px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="city : ${cities}">
-                        <td th:text="${city.id}">1</td>
-                        <td><strong th:text="${city.name}">Neo-Metropolis</strong></td>
-                        <td th:text="${city.totalPopulation}">12000</td>
-                        <td th:text="${city.totalVehicles}">4000</td>
-                        <td th:text="${city.totalBusinesses}">800</td>
                         <td>
-                            <a th:href="@{'/cities/delete/' + ${city.id}}" class="btn-sm btn-danger" onclick="return confirm('Delete this city?');">Delete</a>
+                            <strong style="color: var(--primary-blue); font-family: var(--font-mono);" th:text="'#' + ${city.id}">#1</strong>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.1rem;">🏙️</span>
+                                <div>
+                                    <strong style="color: var(--text-main);" th:text="${city.name}">Neo-Metropolis</strong>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-family: var(--font-mono); font-weight: 600;" th:text="${#numbers.formatInteger(city.totalPopulation, 0, 'WHITESPACE')}">12 500</span>
+                        </td>
+                        <td>
+                            <span style="font-family: var(--font-mono); font-weight: 600;" th:text="${#numbers.formatInteger(city.totalVehicles, 0, 'WHITESPACE')}">4 800</span>
+                        </td>
+                        <td>
+                            <span style="font-family: var(--font-mono); font-weight: 600;" th:text="${#numbers.formatInteger(city.totalBusinesses, 0, 'WHITESPACE')}">950</span>
+                        </td>
+                        <td>
+                            <span class="status-pill pill-live" style="font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                                <span class="pulse-dot"></span> Ready
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            <a th:href="@{/}" class="btn btn-outline btn-sm">▶ Cockpit</a>
+                            <a th:href="@{'/cities/edit/' + ${city.id}}" class="btn btn-secondary btn-sm" style="color: var(--primary-blue); border-color: rgba(96, 165, 250, 0.4);">✏ Edit</a>
+                            <a th:href="@{'/cities/delete/' + ${city.id}}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this city?');">Delete</a>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(cities)}">
-                        <td colspan="6" class="text-center">No cities found. Click "+ Create City" above to add one.</td>
+                        <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            No cities configured. Click "+ Create City" above to add one.
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
 </body>
 </html>

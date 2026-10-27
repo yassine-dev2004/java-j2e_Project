@@ -36,6 +36,21 @@ public class AgentController {
         return agentService.createAgent(agent);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Agent> updateAgent(@PathVariable Long id, @RequestBody Agent agent) {
+        try {
+            return ResponseEntity.ok(agentService.updateAgent(id, agent));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAgent(@PathVariable Long id) {
+        agentService.deleteAgent(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/step")
     public ResponseEntity<Void> stepSimulation() {
         agentService.stepSimulation();

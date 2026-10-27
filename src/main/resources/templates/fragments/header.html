@@ -3,35 +3,137 @@
 <head th:fragment="header-head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title} ?: 'AETHER - Urban Simulation Engine'">AETHER</title>
+    <meta name="description" content="AETHER Lite — Urban Simulation & Decision Intelligence">
+    <title th:text="${title} ?: 'AETHER LITE — Urban Simulation & Decision Intelligence'">AETHER LITE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css(v=3)}">
 </head>
 <body>
-    <header th:fragment="header-nav" class="navbar">
-        <div class="nav-container">
-            <a th:href="@{/}" class="brand">
-                <span class="brand-icon">⚡</span>
-                <span class="brand-text">AETHER</span>
-                <span class="brand-badge">SIMULATOR</span>
-            </a>
-            <nav class="nav-links">
-                <a th:href="@{/}" class="nav-item">Simulation Cockpit</a>
-                <button type="button" id="btnToggleDefenseMode" class="theme-toggle-btn" title="Toggle Academic Defense Walkthrough">
-                    🎓 Mode Soutenance
-                </button>
-                <button type="button" id="btnOpenDocModal" class="nav-item nav-badge" style="background: rgba(2, 132, 199, 0.12); color: var(--accent); border-color: var(--border-accent); cursor: pointer;">
-                    📐 Architecture &amp; OOP
-                </button>
-                <button type="button" id="btnPrintReport" class="theme-toggle-btn" title="Generate Academic Audit Report">
-                    📄 Rapport PDF
-                </button>
-                <a th:href="@{/cities}" class="nav-item">Villes</a>
-                <a th:href="@{/h2-console}" target="_blank" class="nav-item nav-badge" title="Inspect persistent JPA tables">H2 DB</a>
-            </nav>
+    <header th:fragment="header-nav" class="top-header">
+        
+        <!-- Left: Brand Logo & Title -->
+        <a th:href="@{/}" class="header-brand">
+            <svg class="brand-logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 4L6 34H14L20 18L26 34H34L20 4Z" fill="#2563EB"/>
+                <path d="M15 24L20 13L25 24H15Z" fill="#3B82F6"/>
+                <path d="M12 30L20 14L28 30H12Z" fill="#60A5FA" fill-opacity="0.3"/>
+            </svg>
+            <div class="brand-text-group">
+                <div class="brand-name">AETHER <span>LITE</span></div>
+                <div class="brand-sub">Urban Simulation &amp; Decision Intelligence</div>
+            </div>
+        </a>
+
+        <!-- Center: Status & Metrics Pills -->
+        <div class="header-center-pills">
+            <!-- Live Status -->
+            <div id="headerStatusPill" class="status-pill pill-live">
+                <span class="pulse-dot"></span>
+                <span id="headerStatusText">Simulation Running</span>
+            </div>
+
+            <!-- Clock -->
+            <div class="status-pill">
+                <span>⏱</span>
+                <span id="headerClockTime" style="font-family: var(--font-mono); font-weight: 600;">Day 042  14:37</span>
+            </div>
+
+            <!-- Weather -->
+            <div class="status-pill" id="headerWeatherPill">
+                <span id="headerWeatherIcon">☀️</span>
+                <span id="headerWeatherText">21°C  Clear</span>
+            </div>
+
+            <!-- Citizens -->
+            <div class="stat-pill">
+                <span style="font-size: 0.9rem;">👥</span>
+                <span class="stat-pill-label">Citizens</span>
+                <span id="headerCitizens" class="stat-pill-val-green">498 / 500</span>
+            </div>
+
+            <!-- Vehicles -->
+            <div class="stat-pill">
+                <span style="font-size: 0.9rem;">🚗</span>
+                <span class="stat-pill-label">Vehicles</span>
+                <span id="headerVehicles" class="stat-pill-val-blue">147 / 150</span>
+            </div>
+
+            <!-- Businesses -->
+            <div class="stat-pill">
+                <span style="font-size: 0.9rem;">🏪</span>
+                <span class="stat-pill-label">Businesses</span>
+                <span id="headerBusinesses" class="stat-pill-val-amber">48 / 50</span>
+            </div>
         </div>
+
+        <!-- Right: What-If Branch, Notification, Settings, User Avatar -->
+        <div class="header-right">
+            <!-- Branch Dropdown -->
+            <div class="branch-select-box">
+                <span class="branch-label">What-If Branch</span>
+                <select id="headerBranchSelect" class="branch-select">
+                    <option value="BASELINE">Baseline</option>
+                    <option value="ROAD_CLOSURE">Branch 1: Road Closure</option>
+                    <option value="ECONOMIC_STIMULUS">Branch 2: Econ Stimulus</option>
+                    <option value="TRANSIT_EXPANSION">Branch 3: Transit Line</option>
+                    <option value="ENERGY_CRISIS">Branch 4: Energy Crisis</option>
+                </select>
+            </div>
+
+            <!-- Settings Cog -->
+            <button type="button" id="btnHeaderSettings" class="header-icon-btn" title="Settings &amp; Configuration">
+                ⚙
+            </button>
+
+            <!-- Bell Notification with Red Badge -->
+            <div style="position: relative;">
+                <button type="button" id="btnHeaderNotifications" class="header-icon-btn" title="System Alerts &amp; Events">
+                    🔔
+                    <span class="badge-dot"></span>
+                </button>
+                <div id="notificationsPopover" class="popover-menu notifications-popover">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid #e2e8f0;">
+                        <strong style="font-size: 0.82rem; color: var(--text-main);">Notifications &amp; Alerts</strong>
+                        <span id="btnMarkAllRead" style="font-size: 0.7rem; color: var(--primary-blue); cursor: pointer; font-weight: 600;">Mark all read</span>
+                    </div>
+                    <div id="notificationsList" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                        <div class="popover-item">
+                            <div>
+                                <span style="font-size: 0.78rem; font-weight: 600;">⚠️ Traffic Congestion</span>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Avenue des Nations exceeds 85% capacity</div>
+                            </div>
+                            <span style="font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono);">14:32</span>
+                        </div>
+                        <div class="popover-item">
+                            <div>
+                                <span style="font-size: 0.78rem; font-weight: 600;">✅ Economy Vitality</span>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Gross City Product up +3.8% this cycle</div>
+                            </div>
+                            <span style="font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono);">14:20</span>
+                        </div>
+                        <div class="popover-item">
+                            <div>
+                                <span style="font-size: 0.78rem; font-weight: 600;">🤖 A* Routing Engine</span>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">147 vehicles dynamically rerouted</div>
+                            </div>
+                            <span style="font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono);">14:15</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Avatar & Identity -->
+            <div class="user-profile-badge" id="btnHeaderUserProfile" style="cursor: pointer;" title="View Administrator Dossier">
+                <div class="user-avatar-circle">LH</div>
+                <div class="user-info">
+                    <span class="user-name">Louay Hamdi</span>
+                    <span class="user-role">Administrator</span>
+                </div>
+            </div>
+        </div>
+
     </header>
 </body>
 </html>

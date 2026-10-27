@@ -31,7 +31,27 @@ public class CityServiceImpl implements CityService {
 
     @Override
     public City saveCity(City city) {
+        if (city.getId() != null) {
+            return updateCity(city.getId(), city);
+        }
         return cityRepository.save(city);
+    }
+
+    @Override
+    public City updateCity(Long id, City cityDetails) {
+        City existing = cityRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("City with id " + id + " not found"));
+        existing.setName(cityDetails.getName());
+        existing.setTotalPopulation(cityDetails.getTotalPopulation());
+        existing.setTotalVehicles(cityDetails.getTotalVehicles());
+        existing.setTotalBusinesses(cityDetails.getTotalBusinesses());
+        if (cityDetails.getEnergyConsumption() > 0) {
+            existing.setEnergyConsumption(cityDetails.getEnergyConsumption());
+        }
+        if (cityDetails.getEconomicIndex() > 0) {
+            existing.setEconomicIndex(cityDetails.getEconomicIndex());
+        }
+        return cityRepository.save(existing);
     }
 
     @Override

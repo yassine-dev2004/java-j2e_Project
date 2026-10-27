@@ -73,10 +73,11 @@ public class WhatIfEngine {
      */
     public void applyScenario(String scenarioKey, CityGraph graph, AgentEngine agentEngine,
                               EconomyEngine economyEngine, EventEngine eventEngine) {
-        this.activeScenario = scenarioKey;
+        String key = (scenarioKey != null) ? scenarioKey.toUpperCase() : "BASELINE";
+        this.activeScenario = key;
 
-        switch (scenarioKey) {
-            case "ROAD_CLOSURE" -> {
+        switch (key) {
+            case "ROAD_CLOSURE", "BRANCH_1" -> {
                 // Close major arterial Avenue des Nations
                 RoadSegment fwd = graph.getRoad("RD-DOWNTOWN-CENTRAL-FWD");
                 RoadSegment rev = graph.getRoad("RD-DOWNTOWN-CENTRAL-REV");
@@ -87,7 +88,7 @@ public class WhatIfEngine {
                         "SCENARIO ACTIVATED: Major downtown artery 'Avenue des Nations' closed for structural work. Vehicles will reroute via A*.",
                         "CRITICAL");
             }
-            case "ECONOMIC_STIMULUS" -> {
+            case "ECONOMIC_STIMULUS", "BRANCH_2" -> {
                 // Inject $25,000 subsidy into all business agents
                 for (BusinessAgent biz : agentEngine.getAllBusinesses()) {
                     biz.injectStimulus(25000.0);

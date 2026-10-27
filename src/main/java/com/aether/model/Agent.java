@@ -24,6 +24,7 @@ public class Agent {
 
     private double satisfaction; // 0.0 - 100.0
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "city_id")
     private City city;

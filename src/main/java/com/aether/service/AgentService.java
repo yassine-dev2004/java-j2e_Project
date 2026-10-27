@@ -10,6 +10,7 @@ public interface AgentService {
     List<Agent> getAgentsByType(Agent.AgentType type);
     Optional<Agent> getAgentById(Long id);
     Agent createAgent(Agent agent);
+    Agent updateAgent(Long id, Agent agent);
     void deleteAgent(Long id);
     void stepSimulation();
 }

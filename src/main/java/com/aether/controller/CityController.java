@@ -30,6 +30,14 @@ public class CityController {
         return "city/form";
     }
 
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        City city = cityService.getCityById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid city Id: " + id));
+        model.addAttribute("city", city);
+        return "city/form";
+    }
+
     @PostMapping
     public String saveCity(@ModelAttribute City city) {
         cityService.saveCity(city);

@@ -1,49 +1,53 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/header :: header-head('AETHER - Create City')}">
+<head th:replace="~{fragments/header :: header-head('AETHER — Create Simulation City')}">
 </head>
-<body class="theme-dark">
+<body>
     <div th:replace="~{fragments/header :: header-nav}"></div>
 
-    <div class="container container-sm">
+    <div class="container" style="max-width: 680px;">
+        
         <div class="page-header">
             <div>
-                <h1 class="page-title">Create Simulation City</h1>
-                <p class="page-subtitle">Configure parameters for a new urban environment</p>
+                <h1 class="page-title" th:text="${city.id != null} ? 'Edit Simulation City' : 'Create Simulation City'">Create Simulation City</h1>
+                <p class="page-subtitle" th:text="${city.id != null} ? 'Modify parameters for existing urban environment' : 'Configure parameters for a new urban environment'">Configure parameters for a new urban environment</p>
             </div>
             <a th:href="@{/cities}" class="btn btn-outline">&larr; Back to Cities</a>
         </div>
 
-        <div class="card form-card">
+        <div class="form-card">
             <form th:action="@{/cities}" th:object="${city}" method="post">
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{energyConsumption}" />
+                <input type="hidden" th:field="*{economicIndex}" />
+
                 <div class="form-group">
-                    <label for="name">City Name</label>
-                    <input type="text" id="name" th:field="*{name}" class="form-control" placeholder="e.g. Cyberia Prime" required>
+                    <label for="name" style="font-weight: 700; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted);">City Name</label>
+                    <input type="text" id="name" th:field="*{name}" class="form-control" placeholder="e.g. Cyberia Prime" required style="margin-top: 0.35rem;">
                 </div>
 
                 <div class="form-group">
-                    <label for="totalPopulation">Initial Citizen Count</label>
-                    <input type="number" id="totalPopulation" th:field="*{totalPopulation}" class="form-control" placeholder="10000" required>
+                    <label for="totalPopulation" style="font-weight: 700; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted);">Initial Citizen Count</label>
+                    <input type="number" id="totalPopulation" th:field="*{totalPopulation}" class="form-control" placeholder="10000" required style="margin-top: 0.35rem;">
                 </div>
 
                 <div class="form-group">
-                    <label for="totalVehicles">Initial Vehicles Count</label>
-                    <input type="number" id="totalVehicles" th:field="*{totalVehicles}" class="form-control" placeholder="4000" required>
+                    <label for="totalVehicles" style="font-weight: 700; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted);">Initial Vehicles Count</label>
+                    <input type="number" id="totalVehicles" th:field="*{totalVehicles}" class="form-control" placeholder="4000" required style="margin-top: 0.35rem;">
                 </div>
 
                 <div class="form-group">
-                    <label for="totalBusinesses">Initial Businesses Count</label>
-                    <input type="number" id="totalBusinesses" th:field="*{totalBusinesses}" class="form-control" placeholder="800" required>
+                    <label for="totalBusinesses" style="font-weight: 700; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted);">Initial Businesses Count</label>
+                    <input type="number" id="totalBusinesses" th:field="*{totalBusinesses}" class="form-control" placeholder="800" required style="margin-top: 0.35rem;">
                 </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Create City</button>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
                     <a th:href="@{/cities}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary" th:text="${city.id != null} ? 'Update City' : 'Create City'">Create City</button>
                 </div>
             </form>
         </div>
-    </div>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
 </body>
 </html>

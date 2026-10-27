@@ -1,305 +1,624 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/header :: header-head('AETHER Lite - Decision Cockpit')}">
+<head th:replace="~{fragments/header :: header-head('AETHER LITE — Urban Simulation & Decision Intelligence')}">
 </head>
-<body class="theme-dark">
+<body>
+    <!-- Top Header Fragment -->
     <div th:replace="~{fragments/header :: header-nav}"></div>
 
-    <div class="container" style="max-width: 1440px;">
-        <div class="cockpit-layout">
+    <!-- Main Application Container -->
+    <div class="app-container">
 
-            <!-- Top HUD & Simulation Controls Bar -->
-            <div class="sim-hud">
-                <div class="hud-left">
-                    <div class="hud-clock-box">
-                        <div class="clock-time">
-                            <span>⏱</span>
-                            <span id="hudTime" th:text="${clock.formattedTime}">Day 1, 08:00</span>
-                        </div>
-                        <span id="hudPeriod" class="clock-period" th:text="${clock.timePeriodLabel}">Morning Rush Hour</span>
-                    </div>
-
-                    <div class="hud-controls">
-                        <button id="btnStart" class="btn-ctrl btn-ctrl-play" title="Start simulation cycle">
-                            ▶ Play
-                        </button>
-                        <button id="btnPause" class="btn-ctrl btn-ctrl-pause" title="Pause simulation cycle" th:disabled="${!isRunning}">
-                            ⏸ Pause
-                        </button>
-                        <button id="btnStep" class="btn-ctrl" title="Advance 1 simulation step">
-                            ⏭ Step
-                        </button>
-                        <button id="btnReset" class="btn-ctrl btn-danger" title="Reset to initial state">
-                            ↺ Reset
-                        </button>
-                    </div>
-
-                    <div class="speed-selector">
-                        <button class="speed-btn active" data-speed="1">1x</button>
-                        <button class="speed-btn" data-speed="2">2x</button>
-                        <button class="speed-btn" data-speed="5">5x</button>
-                        <button class="speed-btn" data-speed="10">10x</button>
-                    </div>
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                    <div id="wsBadge" class="ws-badge">
-                        <span class="pulse-dot"></span> CONNECTING...
-                    </div>
-                    <div id="hudStatus" class="status-indicator" th:classappend="${isRunning} ? 'status-active' : 'status-idle'">
-                        <span class="status-dot"></span>
-                        <span th:text="${isRunning} ? 'SIMULATION RUNNING' : 'SIMULATION IDLE'">SIMULATION IDLE</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Academic Defense Walkthrough Assistant (Pour les Enseignants / Soutenance) -->
-            <div id="defenseBanner" class="defense-banner">
-                <div class="defense-banner-head">
-                    <div class="defense-title-box">
-                        <span style="font-size: 1.2rem;">🎓</span>
-                        <div>
-                            <strong style="color: var(--text-primary); font-size: 0.95rem;">Guide Pédagogique de Soutenance (Cahier des Charges J2E)</strong>
-                            <div style="font-size: 0.78rem; color: var(--text-secondary);">Cliquez sur une étape pour faire la démonstration directe devant l'évaluateur :</div>
-                        </div>
-                    </div>
-                    <span class="defense-badge">Validation 8/8 Modules</span>
-                </div>
-
-                <div class="defense-steps-grid">
-                    <div class="defense-step-card" data-step="1">
-                        <div>
-                            <div class="step-num">Étape 1 &bull; MOD-01 &amp; Concurrence</div>
-                            <div class="step-title">Horloge Multi-Threadée</div>
-                            <div class="step-meta">ScheduledExecutorService &bull; AtomicLong</div>
-                        </div>
-                        <div class="step-action-tag">▶ Lancer Simulation</div>
-                    </div>
-
-                    <div class="defense-step-card" data-step="2">
-                        <div>
-                            <div class="step-num">Étape 2 &bull; MOD-02 &amp; UML</div>
-                            <div class="step-title">Agents &amp; Inspectable</div>
-                            <div class="step-meta">AbstractAgent &bull; Polymorphisme</div>
-                        </div>
-                        <div class="step-action-tag">🔍 Inspecter Agent</div>
-                    </div>
-
-                    <div class="defense-step-card" data-step="3">
-                        <div>
-                            <div class="step-num">Étape 3 &bull; MOD-03 / MOD-04</div>
-                            <div class="step-title">Algorithme A* &amp; Trafic</div>
-                            <div class="step-meta">Heuristique HCM &bull; PriorityQueue</div>
-                        </div>
-                        <div class="step-action-tag">🔬 Voir Graphe &amp; A*</div>
-                    </div>
-
-                    <div class="defense-step-card" data-step="4">
-                        <div>
-                            <div class="step-num">Étape 4 &bull; MOD-07</div>
-                            <div class="step-title">What-If &amp; Memento</div>
-                            <div class="step-meta">Java 21 Record &bull; Snapshot Diff</div>
-                        </div>
-                        <div class="step-action-tag">📊 Comparer Scénarios</div>
-                    </div>
-
-                    <div class="defense-step-card" data-step="5">
-                        <div>
-                            <div class="step-num">Étape 5 &bull; MOD-06 &amp; JPA</div>
-                            <div class="step-title">Événements &amp; Base H2</div>
-                            <div class="step-meta">Spring Data &bull; Repositories</div>
-                        </div>
-                        <div class="step-action-tag">💾 Vérifier H2 Console</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Simulation Workspace: 2D Canvas + Right Intelligence Panel -->
-            <div class="sim-workspace">
-
-                <!-- Left: 2D Interactive Urban Canvas Viewport -->
-                <div class="canvas-viewport-card">
-                    <div class="canvas-header">
-                        <div class="canvas-title">
-                            <span style="color: var(--accent);">🗺️</span>
-                            <span>NEO-METROPOLIS 2D TOPOLOGICAL GRID</span>
-                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">(Cliquer sur un tronçon, véhicule ou bâtiment)</span>
-                        </div>
-                        <div class="canvas-tools">
-                            <button id="btnZoomIn" class="btn-tool" title="Zoom avant">+</button>
-                            <button id="btnZoomOut" class="btn-tool" title="Zoom arrière">-</button>
-                            <button id="btnResetView" class="btn-tool" title="Recadrer la vue">Fit</button>
-                            <button id="btnToggleAlgo" class="btn-tool" style="color: var(--accent); font-weight: 700;" title="Afficher noeuds du graphe & capacités">🔬 Graphe &amp; A*</button>
-                            <button id="btnToggleHeatmap" class="btn-tool" style="color: var(--accent);" title="Activer/désactiver la congestion">Heatmap</button>
-                            <button id="btnToggleVehicles" class="btn-tool" style="color: var(--accent);" title="Activer/désactiver les véhicules">Véhicules</button>
-                            <button id="btnToggleBuildings" class="btn-tool" style="color: var(--accent);" title="Activer/désactiver les bâtiments">Bâtiments</button>
-                        </div>
-                    </div>
-
-                    <div class="canvas-container">
-                        <canvas id="cityCanvas"></canvas>
-
-                        <!-- Canvas Legend -->
-                        <div class="canvas-legend">
-                            <div class="legend-item"><span class="legend-color" style="background: #10b981;"></span> Free (<30%)</div>
-                            <div class="legend-item"><span class="legend-color" style="background: #f59e0b;"></span> Moderate (30-70%)</div>
-                            <div class="legend-item"><span class="legend-color" style="background: #ef4444;"></span> Congested (>70%)</div>
-                            <div class="legend-item"><span class="legend-color" style="background: #ef4444; border: 1px dashed white;"></span> ⛔ Closed</div>
-                            <div class="legend-item"><span class="legend-color" style="background: #38bdf8; border-radius: 50%;"></span> Vehicle</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right: Analytics, What-If Studio & Live Event Stream -->
-                <div class="sim-sidebar">
-
-                    <!-- Live City Metrics Card -->
-                    <div class="sidebar-card">
-                        <div class="sidebar-title">
-                            <span>Indicateurs &amp; Métriques (MOD-04 / 05)</span>
-                            <span id="kpiLOS" class="inspect-badge" title="Niveau de Service HCM (Highway Capacity Manual)" th:text="${traffic.levelOfService}">A (Fluide)</span>
-                        </div>
-
-                        <div class="metric-bar-group">
-                            <div class="metric-row">
-                                <div class="metric-head">
-                                    <span class="metric-name" title="Ratio moyen Volume/Capacité (V/C) sur l'ensemble du graphe urbain">Congestion Réseau (V/C)</span>
-                                    <span id="kpiCongestion" class="metric-val" th:text="${#numbers.formatDecimal(traffic.averageCongestionRatio * 100, 1, 1)} + '%'">0.0%</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div id="barCongestion" class="progress-bar" style="width: 5%; background-color: #10b981;"></div>
-                                </div>
-                            </div>
-
-                            <div class="metric-row">
-                                <div class="metric-head">
-                                    <span class="metric-name" title="Moyenne pondérée : salaire, temps de trajet et accès aux commodités">Satisfaction Citoyenne</span>
-                                    <span id="kpiSatisfaction" class="metric-val">85.0%</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div id="barSatisfaction" class="progress-bar" style="width: 85%; background-color: #38bdf8;"></div>
-                                </div>
-                            </div>
-
-                            <div class="metric-row">
-                                <div class="metric-head">
-                                    <span class="metric-name" title="Citoyens en poste actif dans les entreprises BusinessAgent">Taux d'Emploi Urbain</span>
-                                    <span id="kpiEmployment" class="metric-val" th:text="${#numbers.formatDecimal(economy.employmentRate, 1, 1)} + '%'">92.5%</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div id="barEmployment" class="progress-bar" style="width: 92.5%; background-color: #10b981;"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-                            <div>
-                                <span class="stat-label">Gross Output</span>
-                                <div id="kpiGDP" class="stat-value" style="font-size: 1.15rem;" th:text="'$' + ${#numbers.formatInteger(economy.grossCityProduct, 0, 'WHITESPACE')}">$1 500 000</div>
-                            </div>
-                            <div>
-                                <span class="stat-label">Avg Speed</span>
-                                <div id="kpiSpeed" class="stat-value text-blue" style="font-size: 1.15rem;" th:text="${#numbers.formatDecimal(traffic.averageNetworkSpeedKmH, 1, 1)} + ' km/h'">45.0 km/h</div>
-                            </div>
-                            <div>
-                                <span class="stat-label">Citizens</span>
-                                <div id="kpiCitizens" class="stat-value text-accent" style="font-size: 1.15rem;">300</div>
-                            </div>
-                            <div>
-                                <span class="stat-label">Vehicles Nav</span>
-                                <div id="kpiVehicles" class="stat-value text-green" style="font-size: 1.15rem;">100</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- What-If Scenario Studio Card (MOD-07) -->
-                    <div class="sidebar-card">
-                        <div class="sidebar-title">
-                            <span>What-If Scenario Studio</span>
-                            <span id="activeScenarioBadge" class="inspect-badge" style="background: rgba(245, 158, 11, 0.15); color: var(--yellow); border-color: rgba(245, 158, 11, 0.3);" th:text="${activeScenario}">BASELINE</span>
-                        </div>
-                        <p class="card-desc" style="margin-bottom: 0.75rem;">Inject environmental disruptions or municipal policy shifts into the live multi-agent city.</p>
-
-                        <div class="whatif-btn-list">
-                            <button class="whatif-action-btn" data-scenario="ROAD_CLOSURE">
-                                <span>🚧 Avenue des Nations Closure</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">A* Reroute</span>
-                            </button>
-                            <button class="whatif-action-btn" data-scenario="ECONOMIC_STIMULUS">
-                                <span>📈 Innovation Grant ($25k/biz)</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Stimulus</span>
-                            </button>
-                            <button class="whatif-action-btn" data-scenario="TRANSIT_EXPANSION">
-                                <span>🚆 Light Rail Transit Line</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">-30% Cars</span>
-                            </button>
-                            <button class="whatif-action-btn" data-scenario="ENERGY_CRISIS">
-                                <span>⚡ Power Grid Brownout</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">-30% Prod</span>
-                            </button>
-                            <button class="whatif-action-btn" data-scenario="BASELINE" style="border-style: dashed;">
-                                <span>↺ Revert to Baseline</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Reset</span>
-                            </button>
-                        </div>
-
-                        <button id="btnCompareWhatIf" class="btn btn-outline" style="margin-top: 0.85rem; justify-content: center; text-align: center; font-weight: 700;">
-                            📊 Compare Scenario with Baseline
-                        </button>
-                    </div>
-
-                    <!-- Live Event Stream Card (MOD-06) -->
-                    <div class="sidebar-card" style="flex: 1; display: flex; flex-direction: column;">
-                        <div class="sidebar-title">
-                            <span>Live Event Stream</span>
-                            <span class="inspect-badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">MOD-06</span>
-                        </div>
-                        <div id="liveEventList" class="event-list" style="max-height: 250px;">
-                            <div th:each="event : ${events}" class="event-item">
-                                <span class="event-time" th:text="${#temporals.format(event.timestamp, 'HH:mm:ss')}">08:00:00</span>
-                                <span class="event-badge" th:classappend="'badge-' + ${#strings.toLowerCase(event.severity)}" th:text="${event.eventType}">EVENT</span>
-                                <span class="event-desc" th:text="${event.description}">Event description text</span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- Live Inspectable Drawer (Appendix B Inspectable) -->
-    <div id="inspectorDrawer" class="inspector-drawer">
-        <div class="drawer-header">
+        <!-- ════ LEFT SIDEBAR NAVIGATION ════ -->
+        <aside class="sidebar-left">
             <div>
-                <span id="inspectBadge" class="inspect-badge">INSPECTABLE</span>
-                <h3 id="inspectName" class="inspect-name" style="margin-top: 0.35rem;">Entity Name</h3>
+                <ul class="nav-menu">
+                    <li>
+                        <a th:href="@{/}" class="nav-link-item active">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: var(--primary-blue);">🏠</span>
+                                <span>Dashboard</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/cities}" class="nav-link-item">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: var(--primary-blue);">📍</span>
+                                <span>City Map</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" id="navItemAgents" class="nav-link-item">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: #475569;">👥</span>
+                                <span>Agents</span>
+                            </div>
+                            <span class="nav-chevron">›</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" id="navItemVehicles" class="nav-link-item">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: #475569;">🚗</span>
+                                <span>Vehicles</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" id="navItemBusinesses" class="nav-link-item">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: #475569;">🏢</span>
+                                <span>Businesses</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" id="navItemSimControl" class="nav-link-item">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: var(--primary-blue);">▶</span>
+                                <span>Simulation Control</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" id="navItemAnalytics" class="nav-link-item">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: #475569;">📊</span>
+                                <span>Analytics</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" id="btnOpenArchitectureModal" class="nav-link-item" title="Academic Architecture Specifications">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: #8b5cf6;">✨</span>
+                                <span>Predictions (AI)</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" id="btnOpenWhatIfModal" class="nav-link-item" title="Scenarios &amp; What-If Studio">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: #475569;">🔀</span>
+                                <span>Scenarios / What-If</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" id="navItemLogs" class="nav-link-item">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: #475569;">📋</span>
+                                <span>Logs &amp; Events</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/h2-console}" target="_blank" class="nav-link-item" title="Inspect persistent H2 JPA Tables">
+                            <div class="nav-link-left">
+                                <span class="nav-link-icon" style="color: #475569;">⚙</span>
+                                <span>Settings</span>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-section">
+                    <div class="quick-actions-title">Quick Actions</div>
+                    <div class="quick-actions-list">
+                        <button type="button" id="btnQuickPause" class="quick-action-btn quick-btn-pause">
+                            <span>⏸</span>
+                            <span>Pause Simulation</span>
+                        </button>
+                        <button type="button" id="btnQuickScenario" class="quick-action-btn quick-btn-scenario">
+                            <span>＋</span>
+                            <span>Create Scenario</span>
+                        </button>
+                        <button type="button" id="btnQuickReports" class="quick-action-btn quick-btn-reports">
+                            <span>👁</span>
+                            <span>View Reports</span>
+                        </button>
+                        <button type="button" id="btnQuickExport" class="quick-action-btn quick-btn-export">
+                            <span>📥</span>
+                            <span>Export Data</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <button id="drawerClose" class="drawer-close" title="Close Drawer">&times;</button>
-        </div>
-        <div class="drawer-body">
-            <div id="inspectGrid" class="inspect-grid">
-                <!-- Dynamically populated key-value attributes -->
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                    <path d="M20 4L6 34H14L20 18L26 34H34L20 4Z" fill="#2563EB"/>
+                </svg>
+                <div class="sidebar-footer-text">
+                    <span class="sidebar-footer-title">AETHER Lite <span style="font-weight: 500; color: var(--text-muted); font-size: 0.65rem;">v1.0</span></span>
+                    <span class="sidebar-footer-desc">Simulate. Understand. Predict. Transform.</span>
+                </div>
             </div>
-            <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
-                Live entity telemetry streamed from Java Multi-Agent Core. Concurrency-safe reflection via Appendix B <code style="color: var(--accent);">Inspectable</code> interface.
-            </p>
-        </div>
+        </aside>
+
+        <!-- ════ CENTER WORKSPACE ════ -->
+        <main class="main-workspace">
+
+            <!-- ── Top Map Viewport Card ── -->
+            <div class="map-card">
+                <!-- Toolbar -->
+                <div class="map-toolbar">
+                    <div class="view-switchers" style="position: relative;">
+                        <button type="button" id="btnView2D" class="btn-view-toggle active">
+                            <span>2D View</span>
+                        </button>
+                        <button type="button" id="btnView3D" class="btn-view-toggle">
+                            <span>🧊 3D View</span>
+                        </button>
+                        <button type="button" id="btnLayersDropdown" class="btn-view-toggle">
+                            <span>Layers ▾</span>
+                        </button>
+                        <div id="layersPopover" class="popover-menu layers-popover">
+                            <div style="font-weight: 700; font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--text-main);">Map Layer Visibility</div>
+                            <div class="popover-item">
+                                <span>🗺 Satellite Orthophoto</span>
+                                <input type="checkbox" id="layerChkSat" checked>
+                            </div>
+                            <div class="popover-item">
+                                <span>🛣 Road Network</span>
+                                <input type="checkbox" id="layerChkRoads" checked>
+                            </div>
+                            <div class="popover-item">
+                                <span>🚦 Traffic Congestion</span>
+                                <input type="checkbox" id="layerChkHeatmap" checked>
+                            </div>
+                            <div class="popover-item">
+                                <span>🏢 Buildings &amp; Facilities</span>
+                                <input type="checkbox" id="layerChkBldgs" checked>
+                            </div>
+                            <div class="popover-item">
+                                <span>📍 Agent Waypoints</span>
+                                <input type="checkbox" id="layerChkWaypoints" checked>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="toolbar-toggles">
+                        <label class="toggle-group" title="Toggle road network &amp; traffic flow">
+                            <span>Traffic</span>
+                            <input type="checkbox" id="toggleTraffic" class="switch-input switch-green" checked>
+                        </label>
+                        <label class="toggle-group" title="Toggle buildings &amp; facilities">
+                            <span>Buildings</span>
+                            <input type="checkbox" id="toggleBuildings" class="switch-input switch-blue" checked>
+                        </label>
+                        <label class="toggle-group" title="Toggle zones &amp; districts">
+                            <span>Zones</span>
+                            <input type="checkbox" id="toggleZones" class="switch-input switch-purple" checked>
+                        </label>
+                        <label class="toggle-group" title="Toggle autonomous agents">
+                            <span>Agents</span>
+                            <input type="checkbox" id="toggleAgents" class="switch-input switch-orange" checked>
+                        </label>
+                    </div>
+
+                    <!-- Search Box -->
+                    <div class="map-search-box" style="position: relative;">
+                        <span>🔍</span>
+                        <input type="text" id="mapSearchInput" placeholder="Search entities...">
+                        <div id="mapSearchResults" class="search-results-dropdown"></div>
+                    </div>
+                </div>
+
+                <!-- Canvas & Map Container -->
+                <div class="map-canvas-container" id="mapContainer">
+                    <canvas id="cityCanvas"></canvas>
+
+                    <!-- Top-Left Floating Compass Dial -->
+                    <div class="map-compass-dial" id="mapCompassDial" title="Compass Orientation">
+                        <svg width="28" height="28" viewBox="0 0 40 40">
+                            <circle cx="20" cy="20" r="18" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+                            <polygon points="20,5 24,19 20,16 16,19" fill="#38BDF8"/>
+                            <polygon points="20,35 24,21 20,24 16,21" fill="#E2E8F0"/>
+                            <text x="20" y="11" text-anchor="middle" fill="#38BDF8" font-size="7" font-weight="800">N</text>
+                            <text x="20" y="33" text-anchor="middle" fill="#94A3B8" font-size="6" font-weight="700">S</text>
+                            <text x="32" y="22" text-anchor="middle" fill="#94A3B8" font-size="6" font-weight="700">E</text>
+                            <text x="8" y="22" text-anchor="middle" fill="#94A3B8" font-size="6" font-weight="700">W</text>
+                        </svg>
+                    </div>
+
+                    <!-- Bottom-Left Floating Zoom Controls -->
+                    <div class="map-zoom-controls">
+                        <button type="button" id="btnZoomIn" class="map-zoom-btn" title="Zoom In">+</button>
+                        <button type="button" id="btnZoomOut" class="map-zoom-btn" title="Zoom Out">−</button>
+                        <button type="button" id="btnResetView" class="map-zoom-btn" title="Reset View">🎯</button>
+                        <button type="button" id="btnToggleLayers" class="map-zoom-btn" title="Layer Stack">📚</button>
+                    </div>
+
+                    <!-- Bottom-Right Floating Mini Map Widget -->
+                    <div class="floating-mini-map-card">
+                        <div class="mini-map-header">
+                            <span>Mini Map</span>
+                            <span style="cursor: pointer;">✕</span>
+                        </div>
+                        <div class="mini-map-body" id="miniMapBody">
+                            <div class="mini-map-viewport-box" id="miniMapViewport"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Bottom 3 Panels Grid ── -->
+            <div class="bottom-panels-grid">
+
+                <!-- 1. City Activity Chart -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span>🧭</span>
+                            <span>City Activity</span>
+                        </div>
+                        <div class="chart-legend">
+                            <span><span class="legend-dot" style="background: var(--green-accent);"></span> Population</span>
+                            <span><span class="legend-dot" style="background: var(--sky-accent);"></span> Traffic</span>
+                            <span><span class="legend-dot" style="background: var(--amber-accent);"></span> Business</span>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <svg width="100%" height="130" viewBox="0 0 360 130" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="popGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
+                                    <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+                                </linearGradient>
+                                <linearGradient id="trafGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.25"/>
+                                    <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.0"/>
+                                </linearGradient>
+                                <linearGradient id="bizGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.25"/>
+                                    <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0"/>
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Horizontal Grid Lines -->
+                            <line x1="30" y1="20" x2="350" y2="20" stroke="#f1f5f9" stroke-width="1"/>
+                            <line x1="30" y1="50" x2="350" y2="50" stroke="#f1f5f9" stroke-width="1"/>
+                            <line x1="30" y1="80" x2="350" y2="80" stroke="#f1f5f9" stroke-width="1"/>
+                            <line x1="30" y1="110" x2="350" y2="110" stroke="#f1f5f9" stroke-width="1"/>
+
+                            <!-- Y-axis labels -->
+                            <text x="5" y="24" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">600</text>
+                            <text x="5" y="54" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">450</text>
+                            <text x="5" y="84" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">300</text>
+                            <text x="5" y="114" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">150</text>
+
+                            <!-- Area 3: Business (Amber) -->
+                            <polygon points="35,115 80,95 140,82 200,80 260,75 320,68 350,65 350,118 35,118" fill="url(#bizGrad)"/>
+                            <path d="M35,115 Q80,95 140,82 T260,75 T350,65" fill="none" stroke="#f59e0b" stroke-width="2"/>
+
+                            <!-- Area 2: Traffic (Blue) -->
+                            <polygon points="35,90 80,78 140,68 200,60 260,52 320,48 350,44 350,118 35,118" fill="url(#trafGrad)"/>
+                            <path d="M35,90 Q80,78 140,68 T260,52 T350,44" fill="none" stroke="#0ea5e9" stroke-width="2"/>
+
+                            <!-- Area 1: Population (Green) -->
+                            <polygon points="35,68 80,60 140,48 200,44 260,38 320,30 350,28 350,118 35,118" fill="url(#popGrad)"/>
+                            <path d="M35,68 Q80,60 140,48 T260,38 T350,28" fill="none" stroke="#10b981" stroke-width="2"/>
+
+                            <!-- Dots on top curve -->
+                            <circle cx="80" cy="60" r="3" fill="#10b981"/>
+                            <circle cx="140" cy="48" r="3" fill="#10b981"/>
+                            <circle cx="200" cy="44" r="3" fill="#10b981"/>
+                            <circle cx="260" cy="38" r="3" fill="#10b981"/>
+                            <circle cx="320" cy="30" r="3" fill="#10b981"/>
+
+                            <!-- X-axis labels -->
+                            <text x="35" y="128" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">10:00</text>
+                            <text x="110" y="128" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">11:00</text>
+                            <text x="185" y="128" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">12:00</text>
+                            <text x="260" y="128" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">13:00</text>
+                            <text x="330" y="128" fill="#94a3b8" font-size="8" font-family="var(--font-mono)">14:00</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 2. Agent Details Inspector -->
+                <div class="panel-card" id="agentDetailsCard">
+                    <div class="panel-header">
+                        <div class="panel-title" id="inspectorHeaderTitle">
+                            <span>👤</span>
+                            <span>Agent Details</span>
+                        </div>
+                    </div>
+
+                    <!-- Profile Row -->
+                    <div class="agent-profile-row">
+                        <div class="agent-profile-left">
+                            <img src="/images/agent_317.jpg" alt="Agent 317" class="agent-avatar-img" id="inspectorAvatarImg">
+                            <div>
+                                <div class="agent-id-title" id="inspectorTitle">Agent #317</div>
+                                <div class="badge-work" id="inspectorStatusBadge">
+                                    <span style="font-size: 0.5rem;">●</span>
+                                    <span>At Work</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="agent-profile-actions">
+                            <button type="button" class="btn-follow" id="btnFollowAgent">Follow</button>
+                            <button type="button" class="btn-view-profile" id="btnViewProfile">View Profile</button>
+                            <button type="button" class="btn-scenario-badge" id="btnAgentScenario">⚡ Scenario</button>
+                        </div>
+                    </div>
+
+                    <!-- Meta Grid -->
+                    <div class="agent-meta-grid">
+                        <div class="meta-item">
+                            <span class="meta-label">Type</span>
+                            <span class="meta-val" id="metaType">👤 Citizen</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Location</span>
+                            <span class="meta-val" id="metaLocation">📍 Business District</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Activity</span>
+                            <span class="meta-val" id="metaActivity">💼 Working (Tech Store)</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Mood</span>
+                            <span class="meta-val" id="metaMood" style="color: var(--green-accent);">😊 Happy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Simulation Controls -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span>🎛</span>
+                            <span>Simulation Controls</span>
+                        </div>
+                    </div>
+
+                    <!-- Speed Slider -->
+                    <div class="speed-slider-row">
+                        <span style="font-weight: 600; color: var(--text-body);">Time Speed</span>
+                        <div class="slider-container">
+                            <input type="range" id="simSpeedSlider" min="1" max="10" step="1" value="1" class="time-range-slider">
+                            <span id="speedSliderLabel" style="font-family: var(--font-mono); font-weight: 700; color: var(--primary-blue);">1.0x</span>
+                        </div>
+                    </div>
+
+                    <!-- Button Controls Row -->
+                    <div class="sim-btn-row">
+                        <button type="button" id="btnStart" class="btn-sim-play">
+                            <span>▶</span> Play
+                        </button>
+                        <button type="button" id="btnPause" class="btn-sim-sub">
+                            <span>⏸</span> Pause
+                        </button>
+                        <button type="button" id="btnReset" class="btn-sim-sub">
+                            <span>↺</span> Reset
+                        </button>
+                    </div>
+
+                    <!-- Active Scenario -->
+                    <div class="scenario-select-row">
+                        <select id="scenarioSelector" class="scenario-dropdown">
+                            <option value="BASELINE">Normal Traffic</option>
+                            <option value="ROAD_CLOSURE">🚧 Avenue des Nations Closure</option>
+                            <option value="ECONOMIC_STIMULUS">📈 Innovation Grant ($25k/biz)</option>
+                            <option value="TRANSIT_EXPANSION">🚆 Light Rail Transit Line</option>
+                            <option value="ENERGY_CRISIS">⚡ Power Grid Brownout</option>
+                        </select>
+                        <button type="button" id="btnManageScenarios" class="btn-manage-scenarios">
+                            <span>⚙</span> Manage
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- ════ RIGHT SIDEBAR WIDGETS ════ -->
+        <aside class="sidebar-right">
+
+            <!-- 1. Live Statistics -->
+            <div class="widget-card">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span>📊</span>
+                        <span>Live Statistics</span>
+                    </div>
+                    <span class="badge-live-tag">
+                        <span class="pulse-dot"></span> Live
+                    </span>
+                </div>
+
+                <div class="stat-box-grid">
+                    <!-- Population -->
+                    <div class="stat-metric-card">
+                        <div class="stat-metric-head">
+                            <span>👥</span> Population
+                        </div>
+                        <div class="stat-metric-num" id="statPopText">498 / 500</div>
+                        <div class="stat-progress-bar-bg">
+                            <div class="stat-progress-bar-fill" id="barPop" style="width: 99.6%; background: var(--green-accent);"></div>
+                        </div>
+                        <div class="stat-pct-label" id="pctPopText">99.6%</div>
+                    </div>
+
+                    <!-- Vehicles -->
+                    <div class="stat-metric-card">
+                        <div class="stat-metric-head">
+                            <span>🚗</span> Vehicles
+                        </div>
+                        <div class="stat-metric-num" id="statVehText">147 / 150</div>
+                        <div class="stat-progress-bar-bg">
+                            <div class="stat-progress-bar-fill" id="barVeh" style="width: 98.0%; background: var(--sky-accent);"></div>
+                        </div>
+                        <div class="stat-pct-label" id="pctVehText">98.0%</div>
+                    </div>
+
+                    <!-- Businesses -->
+                    <div class="stat-metric-card">
+                        <div class="stat-metric-head">
+                            <span>🏪</span> Businesses
+                        </div>
+                        <div class="stat-metric-num" id="statBizText">48 / 50</div>
+                        <div class="stat-progress-bar-bg">
+                            <div class="stat-progress-bar-fill" id="barBiz" style="width: 96.0%; background: var(--amber-accent);"></div>
+                        </div>
+                        <div class="stat-pct-label" id="pctBizText">96.0%</div>
+                    </div>
+
+                    <!-- City Health -->
+                    <div class="stat-metric-card">
+                        <div class="stat-metric-head">
+                            <span>❤️</span> City Health
+                        </div>
+                        <div class="stat-metric-num" id="statHealthText" style="color: var(--green-accent);">92.7%</div>
+                        <!-- Sparkline Curve -->
+                        <div style="height: 18px; margin-top: 0.35rem;">
+                            <svg width="100%" height="18" viewBox="0 0 100 18">
+                                <path d="M0,14 Q25,8 50,11 T100,4" fill="none" stroke="#10b981" stroke-width="2"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Resource Usage -->
+            <div class="widget-card">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span>🖥</span>
+                        <span>Resource Usage</span>
+                    </div>
+                </div>
+
+                <div class="resource-usage-row">
+                    <!-- Donut SVG -->
+                    <div class="donut-chart-box">
+                        <svg width="90" height="90" viewBox="0 0 90 90">
+                            <!-- Background Track -->
+                            <circle cx="45" cy="45" r="36" fill="none" stroke="#f1f5f9" stroke-width="9"/>
+                            <!-- Blue Arc 68% (approx 154 / 226) -->
+                            <circle id="donutArcCircle" cx="45" cy="45" r="36" fill="none" stroke="#2563eb" stroke-width="9"
+                                    stroke-dasharray="154 226" stroke-dashoffset="0"
+                                    stroke-linecap="round" transform="rotate(-90 45 45)"/>
+                        </svg>
+                        <div class="donut-center-text">
+                            <div class="donut-pct-big">68%</div>
+                            <div class="donut-label-sub">CPU</div>
+                        </div>
+                    </div>
+
+                    <!-- Legend Items -->
+                    <div class="resource-legend-list">
+                        <div class="resource-item">
+                            <div class="resource-item-left">
+                                <span class="legend-dot" style="background: var(--primary-blue);"></span>
+                                <span>CPU</span>
+                            </div>
+                            <span class="resource-val">68%</span>
+                        </div>
+                        <div class="resource-item">
+                            <div class="resource-item-left">
+                                <span class="legend-dot" style="background: var(--purple-accent);"></span>
+                                <span>Memory</span>
+                            </div>
+                            <span class="resource-val">54%</span>
+                        </div>
+                        <div class="resource-item">
+                            <div class="resource-item-left">
+                                <span class="legend-dot" style="background: var(--green-accent);"></span>
+                                <span>Disk</span>
+                            </div>
+                            <span class="resource-val">32%</span>
+                        </div>
+                        <div class="resource-item">
+                            <div class="resource-item-left">
+                                <span class="legend-dot" style="background: var(--amber-accent);"></span>
+                                <span>Network</span>
+                            </div>
+                            <span class="resource-val">12%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Recent Events -->
+            <div class="widget-card">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span>🛡</span>
+                        <span>Recent Events</span>
+                    </div>
+                    <a href="javascript:void(0)" id="btnViewAllEvents" style="font-size: 0.72rem; color: var(--primary-blue); font-weight: 600;">View all →</a>
+                </div>
+
+                <div class="events-list" id="eventsListWidget">
+                    <div class="event-row">
+                        <div class="event-row-left">
+                            <div class="event-icon-circle" style="background: #e0f2fe; color: #0284c7;">🚗</div>
+                            <span class="event-text">Vehicle #482 changed route</span>
+                        </div>
+                        <span class="event-time-tag">14:37</span>
+                    </div>
+                    <div class="event-row">
+                        <div class="event-row-left">
+                            <div class="event-icon-circle" style="background: #fef3c7; color: #d97706;">🏪</div>
+                            <span class="event-text">Business #23 completed a sale</span>
+                        </div>
+                        <span class="event-time-tag">14:36</span>
+                    </div>
+                    <div class="event-row">
+                        <div class="event-row-left">
+                            <div class="event-icon-circle" style="background: #dbeafe; color: #2563eb;">👤</div>
+                            <span class="event-text">Citizen #317 arrived at work</span>
+                        </div>
+                        <span class="event-time-tag">14:35</span>
+                    </div>
+                    <div class="event-row">
+                        <div class="event-row-left">
+                            <div class="event-icon-circle" style="background: #fee2e2; color: #dc2626;">⚠️</div>
+                            <span class="event-text text-danger">Traffic congestion detected</span>
+                        </div>
+                        <span class="event-time-tag">14:32</span>
+                    </div>
+                    <div class="event-row">
+                        <div class="event-row-left">
+                            <div class="event-icon-circle" style="background: #d1fae5; color: #059669;">❤️</div>
+                            <span class="event-text">New citizen spawned</span>
+                        </div>
+                        <span class="event-time-tag">14:30</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
     </div>
 
-    <!-- What-If Scenario Comparison Modal Dialog (FR10) -->
+    <!-- ═══ Modals ═══ -->
+    <!-- What-If Scenario Modal -->
     <div id="whatIfModal" class="modal-overlay">
         <div class="modal-dialog">
             <div class="modal-header">
                 <div>
-                    <span class="hero-chip">Decision Intelligence Analysis</span>
-                    <h2 id="modalScenarioTitle" class="card-title" style="font-size: 1.4rem;">Scenario Comparison Report</h2>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">DECISION INTELLIGENCE ANALYSIS</span>
+                    <h2 id="modalScenarioTitle" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Scenario Comparison Report</h2>
                 </div>
-                <button id="modalClose" class="drawer-close">&times;</button>
+                <button type="button" id="modalClose" class="modal-close-btn">&times;</button>
             </div>
 
-            <p class="card-desc">Comprehensive side-by-side indicator diff between Baseline state and Alternative What-If Branch.</p>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.75rem;">
+                Comprehensive side-by-side indicator diff between Baseline state and Alternative What-If Branch.
+            </p>
 
             <table class="comparison-table">
                 <thead>
@@ -311,98 +630,411 @@
                     </tr>
                 </thead>
                 <tbody id="comparisonTableBody">
-                    <!-- Populated dynamically via /api/simulation/whatif/compare -->
+                    <!-- Populated via API -->
                 </tbody>
             </table>
 
-            <div class="ai-recommendation-box">
-                <div class="ai-rec-title">🤖 AETHER Decision Intelligence Recommendation</div>
-                <div id="modalAiRecText" class="ai-rec-text">
-                    Loading comparative analysis...
-                </div>
+            <div class="ai-rec-box">
+                <div class="ai-rec-title">🤖 AETHER DECISION INTELLIGENCE RECOMMENDATION</div>
+                <div id="modalAiRecText" class="ai-rec-text">Evaluation complete across multi-agent behavioral parameters.</div>
             </div>
         </div>
     </div>
 
-    <!-- Educational Architecture & OOP Guide Modal (For Professors & Evaluators) -->
+    <!-- Architecture & Pedagogical Modal -->
     <div id="architectureDocModal" class="modal-overlay">
-        <div class="modal-dialog" style="max-width: 860px;">
+        <div class="modal-dialog">
             <div class="modal-header">
                 <div>
-                    <span class="hero-chip" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">Academic Evaluation &bull; Java Architecture</span>
-                    <h2 class="card-title" style="font-size: 1.4rem;">AETHER Lite &mdash; Technical &amp; OOP Specifications</h2>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">ACADEMIC EVALUATION • JAVA ARCHITECTURE</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">AETHER Lite — Technical &amp; OOP Specifications</h2>
                 </div>
-                <button id="docModalClose" class="drawer-close">&times;</button>
+                <button type="button" id="docModalClose" class="modal-close-btn">&times;</button>
             </div>
 
-            <p class="card-desc">Detailed architectural overview demonstrating the Java principles, patterns, and modules implemented per the <strong>AETHER Lite Cahier des Charges v2</strong>.</p>
-
-            <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.9rem;">
-                
-                <!-- Section 1: OOP & UML Hierarchy -->
-                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
-                    <h3 style="color: var(--accent); font-size: 1.05rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>📐</span> 1. Modèle Conceptuel UML (Annexe B) &amp; Polymorphisme
-                    </h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 0.75rem;">
-                        Toutes les entités de simulation implémentent le polymorphisme et le découplage par interfaces :
-                    </p>
-                    <ul style="color: var(--text-secondary); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                        <li><strong style="color: var(--text-primary); font-family: var(--font-mono);">Inspectable</strong> (Interface) : Contrat d'inspection générique fournissant <code>getInspectableId()</code>, <code>getInspectableName()</code>, <code>getInspectableType()</code> et <code>getInspectionDetails()</code>.</li>
-                        <li><strong style="color: var(--text-primary); font-family: var(--font-mono);">AbstractAgent</strong> (Classe abstraite) : Encapsule les coordonnées spatiales $(x,y)$, la satisfaction, l'état d'activité, et définit la méthode abstraite <code>step(SimulationContext)</code>.</li>
-                        <li><strong style="color: var(--text-primary); font-family: var(--font-mono);">CitizenAgent</strong> : Modélise la population avec routine temporelle (repos, trajet domicile-travail, bureau, dépenses, budget, bonheur).</li>
-                        <li><strong style="color: var(--text-primary); font-family: var(--font-mono);">VehicleAgent</strong> : Navigation autonome sur graphe routier, vitesse dynamique asservie à la congestion, reroutage A*.</li>
-                        <li><strong style="color: var(--text-primary); font-family: var(--font-mono);">BusinessAgent</strong> : Modélise les entreprises urbaines (masse salariale, recrutements, chiffre d'affaires, profits).</li>
-                    </ul>
+            <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.82rem; line-height: 1.6; color: var(--text-body);">
+                <div style="padding: 0.75rem; background: var(--bg-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <strong style="color: var(--primary-blue);">1. Modèle Conceptuel UML (Annexe B) &amp; Polymorphisme</strong>
+                    <p style="margin-top: 0.25rem;">Toutes les entités de simulation implémentent le polymorphisme et le découplage par interfaces : <code>Inspectable</code>, <code>AbstractAgent</code>, <code>CitizenAgent</code>, <code>VehicleAgent</code>, <code>BusinessAgent</code>.</p>
                 </div>
-
-                <!-- Section 2: Algorithms & Data Structures -->
-                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
-                    <h3 style="color: #60a5fa; font-size: 1.05rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>⚡</span> 2. Algorithmique &amp; Structures de Données (MOD-03)
-                    </h3>
-                    <ul style="color: var(--text-secondary); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                        <li><strong style="color: var(--text-primary);">Algorithme A* (A-Star)</strong> : Implémenté dans <code>AStarRoutingEngine.java</code> avec file de priorité <code>PriorityQueue&lt;NodeRecord&gt;</code> ordonnée selon $f(n) = g(n) + h(n)$.</li>
-                        <li><strong style="color: var(--text-primary);">Heuristique Admissible $h(n)$</strong> : Distance euclidienne divisée par la vitesse maximale admissible ($v_{\max} = 90$ km/h), garantissant l'optimalité du chemin.</li>
-                        <li><strong style="color: var(--text-primary);">Coût Réel $g(n)$ avec Congestion</strong> : Le coût d'un tronçon prend en compte sa longueur et sa vitesse effective réduite par le ratio de saturation.</li>
-                        <li><strong style="color: var(--text-primary);">Évitement d'Obstacles</strong> : Si un tronçon est marqué <code>isClosed = true</code> (Scénario What-If 🚧), $A^*$ détecte le blocage et recalcule automatiquement un itinéraire de contournement.</li>
-                    </ul>
+                <div style="padding: 0.75rem; background: var(--bg-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <strong style="color: var(--primary-blue);">2. Algorithme A* &amp; Optimisation de Trafic</strong>
+                    <p style="margin-top: 0.25rem;">Implémenté avec <code>PriorityQueue&lt;NodeRecord&gt;</code> ($f = g + h$), heuristique admissible euclidienne, et pénalité de congestion selon le modèle HCM.</p>
                 </div>
-
-                <!-- Section 3: Concurrency & Thread-Safety -->
-                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
-                    <h3 style="color: #34d399; font-size: 1.05rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>⚙️</span> 3. Concurrence &amp; Robustesse (Java Concurrency)
-                    </h3>
-                    <ul style="color: var(--text-secondary); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                        <li><strong style="color: var(--text-primary);">ScheduledExecutorService</strong> : Cadence les ticks de simulation en arrière-plan sans bloquer les requêtes Web ou le thread UI (1x = 1000ms, 2x = 500ms, 5x = 200ms, 10x = 100ms).</li>
-                        <li><strong style="color: var(--text-primary);">Variables Atomiques</strong> : <code>AtomicBoolean</code> pour l'état d'exécution, <code>AtomicLong</code> pour l'horloge virtuelle, <code>AtomicInteger</code> pour le décompte de véhicules sur chaque route.</li>
-                        <li><strong style="color: var(--text-primary);">Collections Concurrentes</strong> : <code>ConcurrentHashMap</code> pour le graphe et les agents, <code>CopyOnWriteArrayList</code> pour les abonnés (listeners), <code>ConcurrentLinkedDeque</code> pour les événements.</li>
-                        <li><strong style="color: var(--text-primary);">Isolation des Défaillances (NFR-05)</strong> : L'exécution concurrente <code>parallelStream()</code> dans <code>AgentEngine</code> isole chaque agent dans un bloc <code>try-catch</code> pour qu'une exception isolée ne crash jamais la simulation.</li>
-                    </ul>
+                <div style="padding: 0.75rem; background: var(--bg-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <strong style="color: var(--primary-blue);">3. Concurrence &amp; Thread-Safety</strong>
+                    <p style="margin-top: 0.25rem;"><code>ScheduledExecutorService</code> cadencé, collections thread-safe (<code>ConcurrentHashMap</code>), et variables atomiques (<code>AtomicLong</code>, <code>AtomicBoolean</code>).</p>
                 </div>
-
-                <!-- Section 4: What-If Engine -->
-                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
-                    <h3 style="color: var(--yellow); font-size: 1.05rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>🔬</span> 4. Moteur de Scénarios What-If &amp; Records Java 21 (MOD-07)
-                    </h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 0.75rem;">
-                        Implémente le pattern <strong>Memento / Snapshot</strong> via les records Java 21 :
-                    </p>
-                    <ul style="color: var(--text-secondary); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                        <li><strong style="color: var(--text-primary); font-family: var(--font-mono);">SimulationSnapshot</strong> (Record) : Capture immuable des métriques de référence (Baseline).</li>
-                        <li><strong style="color: var(--text-primary);">Analyse Différentielle ($\Delta$)</strong> : Calcul automatisé des deltas de congestion, vitesse, satisfaction, emploi et PIB avec génération de recommandations d'intelligence décisionnelle.</li>
-                    </ul>
-                </div>
-
             </div>
         </div>
     </div>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+    <!-- ═══ 1. AGENTS DIRECTORY MODAL ═══ -->
+    <div id="agentsDirectoryModal" class="modal-overlay">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">AUTONOMOUS MULTI-AGENT REGISTRY</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Citizens &amp; Agents Directory</h2>
+                </div>
+                <button type="button" id="agentsModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                <input type="text" id="agentSearchInput" class="form-control" placeholder="Search by citizen name, role, or location...">
+            </div>
+            <div style="max-height: 480px; overflow-y: auto;">
+                <table class="data-table" style="font-size: 0.8rem;">
+                    <thead>
+                        <tr>
+                            <th>Citizen</th>
+                            <th>Occupation</th>
+                            <th>Income</th>
+                            <th>Satisfaction</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agentsModalTableBody">
+                        <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading citizens...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 2. VEHICLES FLEET MODAL ═══ -->
+    <div id="vehiclesFleetModal" class="modal-overlay">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">AUTONOMOUS FLEET &amp; A* ROUTING</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Vehicles Fleet Telemetry</h2>
+                </div>
+                <button type="button" id="vehiclesModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <div style="max-height: 480px; overflow-y: auto;">
+                <table class="data-table" style="font-size: 0.8rem;">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Current Speed</th>
+                            <th>Max Speed</th>
+                            <th>Origin Node</th>
+                            <th>Destination Node</th>
+                            <th>Reroutes</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehiclesModalTableBody">
+                        <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading fleet...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 3. BUSINESSES & COMMERCE MODAL ═══ -->
+    <div id="businessesModal" class="modal-overlay">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">URBAN COMMERCE &amp; FIRMS</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Businesses &amp; Enterprise Directory</h2>
+                </div>
+                <button type="button" id="businessesModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <div style="max-height: 480px; overflow-y: auto;">
+                <table class="data-table" style="font-size: 0.8rem;">
+                    <thead>
+                        <tr>
+                            <th>Enterprise</th>
+                            <th>Sector</th>
+                            <th>Staff / Capacity</th>
+                            <th>Avg Salary</th>
+                            <th>Revenue</th>
+                            <th>Net Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="businessesModalTableBody">
+                        <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading enterprises...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 4. ANALYTICS STUDIO MODAL ═══ -->
+    <div id="analyticsModal" class="modal-overlay">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">MACRO-ANALYTICS &amp; KPI AUDIT</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Urban Intelligence Analytics Studio</h2>
+                </div>
+                <button type="button" id="analyticsModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="stat-metric-card" style="padding: 1rem;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Gross City Product</span>
+                    <div id="analyticsGcp" style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem;">$1 280 400</div>
+                    <div style="font-size: 0.72rem; color: var(--green-accent); margin-top: 0.35rem;">↑ +4.2% Economic vitality</div>
+                </div>
+                <div class="stat-metric-card" style="padding: 1rem;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Traffic Congestion</span>
+                    <div id="analyticsCongestion" style="font-size: 1.4rem; font-weight: 800; color: var(--sky-accent); margin-top: 0.25rem;">24.5%</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">Level of Service: B (Stable)</div>
+                </div>
+                <div class="stat-metric-card" style="padding: 1rem;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Average Happiness</span>
+                    <div id="analyticsSat" style="font-size: 1.4rem; font-weight: 800; color: var(--green-accent); margin-top: 0.25rem;">84.2%</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">Optimal citizen welfare index</div>
+                </div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <strong style="color: var(--primary-blue); font-size: 0.85rem;">Urban Performance Insights</strong>
+                <p style="font-size: 0.8rem; color: var(--text-body); margin-top: 0.5rem; line-height: 1.6;">
+                    The simulation is converging towards high economic vitality and low transit latency. Autonomous vehicles are actively using A* heuristic routing with HCM volume-to-capacity congestion avoidance. Businesses maintain a 96% operational capacity with strong consumer expenditure flows.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 5. LOGS & AUDIT TRAIL MODAL ═══ -->
+    <div id="logsModal" class="modal-overlay">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">SYSTEM LOGS &amp; EVENT BUS</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Simulation Audit Trail &amp; Logs</h2>
+                </div>
+                <button type="button" id="logsModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <div style="max-height: 480px; overflow-y: auto;">
+                <table class="data-table" style="font-size: 0.8rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 140px;">Timestamp</th>
+                            <th style="width: 130px;">Event Type</th>
+                            <th style="width: 90px;">Severity</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsModalTableBody">
+                        <tr><td colspan="4" style="text-align: center; padding: 2rem;">Loading event logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 6. SETTINGS MODAL ═══ -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">ENVIRONMENT CONFIGURATION</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Simulation System Settings</h2>
+                </div>
+                <button type="button" id="settingsModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="form-group" style="margin: 0;">
+                    <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-main);">Weather Condition</label>
+                    <select id="cfgWeather" class="form-control" style="margin-top: 0.35rem;">
+                        <option value="CLEAR" selected>☀️ Clear &amp; Sunny (21°C)</option>
+                        <option value="RAIN">🌧️ Moderate Rain (16°C, -15% road friction)</option>
+                        <option value="FOG">🌫️ Dense Morning Fog (12°C)</option>
+                        <option value="HEATWAVE">🔥 Extreme Heatwave (36°C, +25% energy demand)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-main);">Audio &amp; Pulse Alerts</label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem;">
+                        <input type="checkbox" id="cfgAudioAlerts" checked>
+                        <span style="font-size: 0.82rem; color: var(--text-body);">Play subtle acoustic chimes on critical incidents</span>
+                    </div>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-main);">Database Administration</label>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.25rem 0 0.5rem 0;">Direct access to Spring Boot In-Memory JPA Database.</p>
+                    <a th:href="@{/h2-console}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex;">Open H2 In-Memory Console ↗</a>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                <button type="button" id="btnSaveSettings" class="btn btn-primary">Apply Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 7. AGENT DOSSIER MODAL ═══ -->
+    <div id="agentDossierModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <span id="dossierPill" class="status-pill pill-live" style="margin-bottom: 0.4rem;">CITIZEN BIOMETRIC DOSSIER</span>
+                    <h2 id="dossierName" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Agent #317 — Dossier</h2>
+                </div>
+                <button type="button" id="dossierModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="agent-dossier-grid">
+                <div>
+                    <img src="/images/agent_317.jpg" id="dossierAvatar" alt="Agent Avatar" class="agent-dossier-avatar">
+                    <div id="dossierMoodBadge" style="margin-top: 0.5rem; text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--green-accent);">😊 Happy (94%)</div>
+                </div>
+                <div>
+                    <div class="dossier-field-row">
+                        <span id="dossierLabelId" style="color: var(--text-muted);">Citizen ID:</span>
+                        <strong id="dossierId" style="font-family: var(--font-mono);">CITIZEN_317</strong>
+                    </div>
+                    <div class="dossier-field-row">
+                        <span id="dossierLabelOccupation" style="color: var(--text-muted);">Occupation:</span>
+                        <strong id="dossierOccupation">Senior AI Engineer</strong>
+                    </div>
+                    <div class="dossier-field-row">
+                        <span id="dossierLabelIncome" style="color: var(--text-muted);">Monthly Income:</span>
+                        <strong id="dossierIncome">$4 850 / mo</strong>
+                    </div>
+                    <div class="dossier-field-row">
+                        <span id="dossierLabelLocation" style="color: var(--text-muted);">Current Location:</span>
+                        <strong id="dossierLocation">Business District (Tech Store)</strong>
+                    </div>
+                    <div class="dossier-field-row">
+                        <span id="dossierLabelHome" style="color: var(--text-muted);">Residence Node:</span>
+                        <strong id="dossierHome">Uptown Heights (N-UPTOWN-1)</strong>
+                    </div>
+                    <div class="dossier-field-row">
+                        <span id="dossierLabelWork" style="color: var(--text-muted);">Workplace Node:</span>
+                        <strong id="dossierWork">Innovation Plaza (N-TECH-HUB)</strong>
+                    </div>
+                </div>
+            </div>
+            <div style="background: var(--bg-subtle); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <strong id="dossierScheduleTitle" style="font-size: 0.8rem; color: var(--text-main);">Daily Routine &amp; Schedule:</strong>
+                <div id="dossierScheduleContent" style="font-size: 0.75rem; color: var(--text-body); margin-top: 0.35rem; display: flex; justify-content: space-between;">
+                    <span>08:00 Commute</span>
+                    <span>09:00 Work Shift</span>
+                    <span>17:00 Recreation</span>
+                    <span>20:00 Return Home</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 8. AGENT INTERVENTION MODAL ═══ -->
+    <div id="agentInterventionModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">MICRO-INTERVENTION STUDIO</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Apply Agent Scenario Intervention</h2>
+                </div>
+                <button type="button" id="interventionModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                Select a policy action or event to execute on <strong id="interventionTargetName" style="color: var(--text-main);">Agent #317</strong>:
+            </p>
+            <div class="intervention-card-grid">
+                <div class="intervention-card" data-action="BONUS">
+                    <strong style="font-size: 0.82rem; color: var(--green-accent);">💰 Salary Bonus (+15%)</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">Grant financial promotion and boost satisfaction by +15.</div>
+                </div>
+                <div class="intervention-card" data-action="WELLNESS">
+                    <strong style="font-size: 0.82rem; color: var(--sky-accent);">🌿 Wellness Program</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">Enroll in municipal health care and set satisfaction to 100%.</div>
+                </div>
+                <div class="intervention-card" data-action="RELOCATE">
+                    <strong style="font-size: 0.82rem; color: var(--purple-accent);">🏡 Eco-Relocation</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">Relocate home to a sustainable green eco-neighborhood.</div>
+                </div>
+                <div class="intervention-card" data-action="DELAY">
+                    <strong style="font-size: 0.82rem; color: var(--amber-accent);">🚧 Traffic Delay Test</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">Simulate commute road obstruction to evaluate resilience.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 9. EXPORT DATA MODAL ═══ -->
+    <div id="exportModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">DATA ACQUISITION &amp; TELEMETRY</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Export Simulation Datasets</h2>
+                </div>
+                <button type="button" id="exportModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Select the desired format to export telemetry from the active simulation run:
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <button type="button" id="btnExportFullJson" class="btn btn-secondary" style="justify-content: flex-start; padding: 0.85rem 1rem;">
+                    <span>📄</span>
+                    <div style="text-align: left;">
+                        <strong>Complete State Snapshot (JSON)</strong>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Includes city graph, road network, vehicles, and KPI metrics</div>
+                    </div>
+                </button>
+                <button type="button" id="btnExportCitizensCsv" class="btn btn-secondary" style="justify-content: flex-start; padding: 0.85rem 1rem;">
+                    <span>👥</span>
+                    <div style="text-align: left;">
+                        <strong>Citizens &amp; Demographics (CSV)</strong>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Export list of all citizens, incomes, occupations, and satisfaction</div>
+                    </div>
+                </button>
+                <button type="button" id="btnExportVehiclesCsv" class="btn btn-secondary" style="justify-content: flex-start; padding: 0.85rem 1rem;">
+                    <span>🚗</span>
+                    <div style="text-align: left;">
+                        <strong>Fleet &amp; Traffic Flows (CSV)</strong>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Export vehicle speeds, active routes, and reroute counts</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 10. USER PROFILE MODAL ═══ -->
+    <div id="userProfileModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <span class="status-pill pill-live" style="margin-bottom: 0.4rem;">SECURITY CREDENTIALS</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Administrator Profile</h2>
+                </div>
+                <button type="button" id="userProfileModalClose" class="modal-close-btn">&times;</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+                <div class="user-avatar-circle" style="width: 54px; height: 54px; font-size: 1.2rem;">LH</div>
+                <div>
+                    <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);">Louay Hamdi</div>
+                    <div style="font-size: 0.8rem; color: var(--primary-blue); font-weight: 600;">System Administrator &amp; Lead Architect</div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.82rem;">
+                <div class="dossier-field-row">
+                    <span style="color: var(--text-muted);">Access Level:</span>
+                    <strong style="color: var(--green-accent);">Full Root Simulation Authority (Superuser)</strong>
+                </div>
+                <div class="dossier-field-row">
+                    <span style="color: var(--text-muted);">Simulation Host:</span>
+                    <strong style="font-family: var(--font-mono);">http://localhost:8081/</strong>
+                </div>
+                <div class="dossier-field-row">
+                    <span style="color: var(--text-muted);">Spring Framework:</span>
+                    <strong style="font-family: var(--font-mono);">Spring Boot 3.3.4 (Java 21 LTS)</strong>
+                </div>
+                <div class="dossier-field-row">
+                    <span style="color: var(--text-muted);">Active Topology:</span>
+                    <strong>Neo-Metropolis Multi-Agent Graph</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Toast Container ═══ -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <!-- Simulation Client Engine -->
-    <script th:src="@{/js/simulation.js}"></script>
+    <script th:src="@{/js/simulation.js(v=4)}"></script>
 </body>
 </html>

@@ -90,7 +90,7 @@ public class CitizenAgent extends AbstractAgent {
                 if (hour >= 17) {
                     // Evening leisure or head home
                     if (Math.random() < 0.6) {
-                        commute(CitizenState.COMMUTING_TO_LEISURE, "NODE-COMMERCIAL-1", context);
+                        commute(CitizenState.COMMUTING_TO_LEISURE, "N-CENTRAL-PLAZA", context);
                     } else {
                         commute(CitizenState.COMMUTING_HOME, homeNodeId, context);
                     }
@@ -98,8 +98,8 @@ public class CitizenAgent extends AbstractAgent {
                 break;
 
             case COMMUTING_TO_LEISURE:
-                this.currentNodeId = "NODE-COMMERCIAL-1";
-                updatePositionToNode(context, "NODE-COMMERCIAL-1");
+                this.currentNodeId = "N-CENTRAL-PLAZA";
+                updatePositionToNode(context, "N-CENTRAL-PLAZA");
                 this.state = CitizenState.LEISURE;
                 this.status = "LEISURE & SHOPPING";
                 break;

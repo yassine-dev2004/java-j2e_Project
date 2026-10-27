@@ -54,8 +54,8 @@ public class AgentEngine {
 
         Random random = new Random(42); // Reproducible initial seed (NFR-04)
 
-        // 1. Create Business Agents (~30 businesses across the city)
-        for (int i = 0; i < 30; i++) {
+        // 1. Create Business Agents (~50 businesses across the city)
+        for (int i = 0; i < 50; i++) {
             String id = "BIZ-" + String.format("%03d", i + 1);
             String name = (i < BUSINESS_NAMES.length) ? BUSINESS_NAMES[i] : "Enterprise " + (i + 1);
             CityNode hubNode = nodes.get(random.nextInt(nodes.size()));
@@ -74,11 +74,11 @@ public class AgentEngine {
             businesses.put(id, biz);
         }
 
-        // 2. Create Citizen Agents (~300 citizens)
+        // 2. Create Citizen Agents (~500 citizens)
         List<String> residentialNodeIds = List.of("N-UPTOWN-1", "N-UPTOWN-2", "N-BAYSIDE-1", "N-METRO-SOUTH");
         List<String> commercialNodeIds = List.of("N-CENTRAL-PLAZA", "N-TECH-HUB", "N-FINANCIAL", "N-CIVIC-HALL", "N-IND-PARK");
 
-        for (int i = 0; i < 300; i++) {
+        for (int i = 0; i < 500; i++) {
             String id = "CITIZEN-" + String.format("%04d", i + 1);
             String name = (i < CITIZEN_NAMES.length) ? CITIZEN_NAMES[i] : ("Citizen " + (i + 1));
             String homeNodeId = residentialNodeIds.get(random.nextInt(residentialNodeIds.size()));
@@ -96,8 +96,8 @@ public class AgentEngine {
             citizens.put(id, citizen);
         }
 
-        // 3. Create Vehicle Agents (~100 autonomous vehicles)
-        for (int i = 0; i < 100; i++) {
+        // 3. Create Vehicle Agents (~150 autonomous vehicles)
+        for (int i = 0; i < 150; i++) {
             String id = "VEHICLE-" + String.format("%03d", i + 1);
             String name = "Vehicle #" + (i + 1);
             CityNode orig = nodes.get(random.nextInt(nodes.size()));
@@ -145,7 +145,7 @@ public class AgentEngine {
     }
 
     public Inspectable findInspectable(String id, CityGraph graph) {
-        if (id == null) return null;
+        if (id == null || id.isBlank()) return null;
         if (citizens.containsKey(id)) return citizens.get(id);
         if (vehicles.containsKey(id)) return vehicles.get(id);
         if (businesses.containsKey(id)) return businesses.get(id);
@@ -153,6 +153,29 @@ public class AgentEngine {
         if (graph.getRoad(id) != null) return graph.getRoad(id);
         if (graph.getBuilding(id) != null) return graph.getBuilding(id);
         if (graph.getNeighborhood(id) != null) return graph.getNeighborhood(id);
+
+        // Normalize variations (e.g. CITIZEN_317 -> CITIZEN-0317 or BIZ_23 -> BIZ-023)
+        String norm = id.toUpperCase().replace('_', '-');
+        if (citizens.containsKey(norm)) return citizens.get(norm);
+        if (businesses.containsKey(norm)) return businesses.get(norm);
+
+        if (norm.startsWith("CITIZEN-")) {
+            String numPart = norm.substring("CITIZEN-".length());
+            try {
+                int n = Integer.parseInt(numPart);
+                String padded = String.format("CITIZEN-%04d", n);
+                if (citizens.containsKey(padded)) return citizens.get(padded);
+            } catch (NumberFormatException ignored) {}
+        }
+        if (norm.startsWith("BIZ-")) {
+            String numPart = norm.substring("BIZ-".length());
+            try {
+                int n = Integer.parseInt(numPart);
+                String padded = String.format("BIZ-%03d", n);
+                if (businesses.containsKey(padded)) return businesses.get(padded);
+            } catch (NumberFormatException ignored) {}
+        }
+
         return null;
     }
 

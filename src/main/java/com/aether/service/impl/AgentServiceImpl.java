@@ -47,6 +47,22 @@ public class AgentServiceImpl implements AgentService {
     }
 
     @Override
+    public Agent updateAgent(Long id, Agent agentDetails) {
+        Agent existing = agentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Agent with id " + id + " not found"));
+        existing.setName(agentDetails.getName());
+        existing.setType(agentDetails.getType());
+        existing.setStatus(agentDetails.getStatus());
+        existing.setPosX(agentDetails.getPosX());
+        existing.setPosY(agentDetails.getPosY());
+        existing.setSatisfaction(agentDetails.getSatisfaction());
+        if (agentDetails.getCity() != null) {
+            existing.setCity(agentDetails.getCity());
+        }
+        return agentRepository.save(existing);
+    }
+
+    @Override
     public void deleteAgent(Long id) {
         agentRepository.deleteById(id);
     }
